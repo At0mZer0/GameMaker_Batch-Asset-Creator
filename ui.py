@@ -4,13 +4,16 @@ import os
 from asset_types import ASSET
 from async_json_loader import AsyncJsonLoader
 from asset_creator import AssetCreator
+from room_atlas_ui import RoomAtlasPanel
+from character_atlas_ui import CharacterAtlasPanel
+from png_trim_ui import PngTrimPanel
 
 class AutoObjectCreatorUI:
     # Pass in the root widget for the app in the main() need to create an instance of Tk()
     def __init__(self, root):
         self.root = root
         self.root.title("GMS2 Object and Sprite Batch Asset Creator")
-        self.root.geometry("600x800")
+        self.root.geometry("640x860")
 
         # Set Dark theme
         try:
@@ -38,6 +41,9 @@ class AutoObjectCreatorUI:
 
     def createWidgets(self):
         self.createTitleSection()
+        self.createNotebook()
+
+        # Batch Assets tab
         self.createSpritesSection()
         self.createProjectSection()
         self.createReplaceSection()
@@ -45,6 +51,29 @@ class AutoObjectCreatorUI:
         self.createParentObjectSection()
         self.createTagsSection()
         self.createObjectButton()
+
+        # Room Atlas Packer tab
+        self.atlasPanel = RoomAtlasPanel(self.atlasTab, self)
+
+        # Character Atlas Packer tab
+        self.characterAtlasPanel = CharacterAtlasPanel(self.characterTab, self)
+
+        # PNG Trim tab
+        self.pngTrimPanel = PngTrimPanel(self.trimTab, self)
+
+    def createNotebook(self):
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill = "both", expand = True, padx = 5, pady = 5)
+
+        self.assetTab = ttk.Frame(self.notebook)
+        self.atlasTab = ttk.Frame(self.notebook)
+        self.characterTab = ttk.Frame(self.notebook)
+        self.trimTab = ttk.Frame(self.notebook)
+
+        self.notebook.add(self.assetTab, text = "Batch Assets")
+        self.notebook.add(self.atlasTab, text = "Room Atlas Packer")
+        self.notebook.add(self.characterTab, text = "Character Atlas Packer")
+        self.notebook.add(self.trimTab, text = "PNG Trim")
 
 
 # region UI Creation Methods
@@ -56,7 +85,7 @@ class AutoObjectCreatorUI:
 
     # Sprites Directory selection
     def createSpritesSection(self):
-        spritesFrame = ttk.Frame(self.root)
+        spritesFrame = ttk.Frame(self.assetTab)
         spritesFrame.pack(pady = 10, padx = 20, fill = "x")
 
         ttk.Label(spritesFrame, text = "Select Sprites Directory:").pack(anchor = "w")
@@ -72,7 +101,7 @@ class AutoObjectCreatorUI:
 
     # Project Directory selection
     def createProjectSection(self):
-        projectFrame = ttk.Frame(self.root) 
+        projectFrame = ttk.Frame(self.assetTab)
         projectFrame.pack(pady = 10, padx = 20, fill = "x")
 
         ttk.Label(projectFrame, text = "Select Game Maker Project Directory:").pack(anchor = "w")
@@ -99,7 +128,7 @@ class AutoObjectCreatorUI:
 
 
     def createReplaceSection(self):
-        replaceFrame = ttk.Frame(self.root)
+        replaceFrame = ttk.Frame(self.assetTab)
         replaceFrame.pack(pady = 10, padx = 20, fill = "x")
 
         # Text to replace
@@ -115,7 +144,7 @@ class AutoObjectCreatorUI:
         self.replaceText.insert(0, "obj")
 
     def createOriginSection(self):
-        originFrame = ttk.Frame(self.root)
+        originFrame = ttk.Frame(self.assetTab)
         originFrame.pack(pady = 10, padx = 20, fill = "x")
 
         # Origin selection
@@ -139,7 +168,7 @@ class AutoObjectCreatorUI:
         self.selectedOrigin.set("Top Left")
 
     def createParentObjectSection(self):
-        parentFrame = ttk.Frame(self.root)
+        parentFrame = ttk.Frame(self.assetTab)
         parentFrame.pack(pady = 10, padx = 20, fill = "x")
 
         # Parent Object section
@@ -152,7 +181,7 @@ class AutoObjectCreatorUI:
         helpLabel.pack(anchor = "w")
 
     def createTagsSection(self):
-        tagsFrame = ttk.Frame(self.root)
+        tagsFrame = ttk.Frame(self.assetTab)
         tagsFrame.pack(pady = 10, padx = 20, fill = "x")
 
         # Tags section
@@ -165,12 +194,12 @@ class AutoObjectCreatorUI:
         helpLabel.pack(anchor = "w")
 
     def createObjectButton(self):
-        buttonFrame = ttk.Frame(self.root)
+        buttonFrame = ttk.Frame(self.assetTab)
         buttonFrame.pack(pady = 20)
 
-        ttk.Button(self.root, text = "Create Objects", command = self.runObjectCreation).pack(side = "left", padx = (0, 5))
-        ttk.Button(self.root, text = "Create Sprites", command = self.runSpriteCreation).pack(side = "left", padx = (0, 5))
-        ttk.Button(self.root, text = "Create Both", command = self.runSpriteAndObjectCreation).pack(side = "left")
+        ttk.Button(buttonFrame, text = "Create Objects", command = self.runObjectCreation).pack(side = "left", padx = (0, 5))
+        ttk.Button(buttonFrame, text = "Create Sprites", command = self.runSpriteCreation).pack(side = "left", padx = (0, 5))
+        ttk.Button(buttonFrame, text = "Create Both", command = self.runSpriteAndObjectCreation).pack(side = "left")
 
     # Method for button handler to select sprites directory
     def selectSpritesDirectory(self):
@@ -193,6 +222,8 @@ class AutoObjectCreatorUI:
             self.resetProjectState()
             self.projectDirectory.set(directory)
             self.updateFolderDropdown()
+            self.atlasPanel.refreshRooms()
+            self.characterAtlasPanel.refreshRooms()
 
     def updateFolderDropdown(self):
         projectPath = self.projectDirectory.get()
